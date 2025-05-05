@@ -13,6 +13,9 @@ def get_action(state, agent=None):
     Get an action for the agent based on the current state.
     Incorporates basic strategy and agent personality.
     """
+    print(f"DEBUG: Agent name: {agent.name if agent else 'None'}")
+
+
     if agent is None:
         return random_valid_action(state)
     
@@ -23,7 +26,9 @@ def get_action(state, agent=None):
     personality = get_agent_personality(agent)
     
     # Determine action based on hand strength and personality
-    return determine_action(state, hand_strength, personality)
+    action = determine_action(state, hand_strength, personality)
+    print(f"DEBUG: Action from get_action: {action}, amount: {action.amount if hasattr(action, 'amount') else 'No amount attribute'}")
+    return action
 
 def evaluate_hand_strength(state, agent):
     """
@@ -55,6 +60,7 @@ def determine_action(state, hand_strength, personality):
     Determine the action based on hand strength and personality.
     This implementation encourages more interesting gameplay by reducing early folds.
     """
+    
     legals = state.legal_actions
     
     # Extract the action types from the legal actions
@@ -75,7 +81,7 @@ def determine_action(state, hand_strength, personality):
     
     # In preflop, be more aggressive to encourage longer games
     if game_stage == "preflop":
-        effective_strength = max(0.4, hand_strength)  # Minimum 0.4 strength in preflop
+        effective_strength = max(0.6, hand_strength)  # Minimum 0.6 strength in preflop
         
         # Reduce folding in preflop
         if "fold" in legal_types and len(legals) > 1:
@@ -87,6 +93,8 @@ def determine_action(state, hand_strength, personality):
                     if len(legals) > 1:  # Make sure we always have at least one action
                         legals.pop(idx)
                         legal_types.pop(idx)
+        
+
     
     # Adjust based on bluffing tendency
     if random.random() < personality["bluff_tendency"]:
@@ -121,8 +129,40 @@ def determine_action(state, hand_strength, personality):
     
     # Choose an action based on weights
     if weights:
+        
         chosen_idx = random.choices(range(len(legals)), weights=weights, k=1)[0]
-        return pk.Action(legals[chosen_idx])
+        chosen_action = legals[chosen_idx]
+        
+        print(f"DEBUG: chosen_action: {chosen_action}, chosen_action name: {chosen_action.name if hasattr(chosen_action, 'name') else str(chosen_action)}")
+        
+        # Check if the action is a raise based on the enum value
+        if chosen_action == pk.ActionEnum.Raise:
+            print(f"DEBUG: Action is a raise")
+            # Determine the amount based on hand strength and personality
+            # The more aggressive the player and the stronger the hand, the higher the amount
+            base_amount = 10  # Base amount for raise or bet
+            
+            # Adjust based on hand strength and aggression
+            strength_factor = 1.0 + (effective_strength * 2.0)  # 1.0 to 3.0
+            aggression_factor = 1.0 + (personality["aggression"] * 1.5)  # 1.0 to 2.5
+            
+            # Calculate the amount
+            amount = base_amount * strength_factor * aggression_factor
+            
+            # Round to nearest 5
+            amount = round(amount / 5) * 5
+            
+            # Ensure minimum amount is 5
+            amount = max(5, amount)
+            
+            # Create the action with the amount
+            print(f"DEBUG: Creating action with amount: {amount}")
+            action = pk.Action(chosen_action, amount)
+            print(f"DEBUG: Created action: {action}, amount: {action.amount if hasattr(action, 'amount') else 'No amount attribute'}")
+            return action
+        else:
+            # For other actions, no amount is needed
+            return pk.Action(chosen_action)
     
     # Fallback to random action
     return random_valid_action(state)

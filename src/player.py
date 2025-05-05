@@ -164,54 +164,23 @@ Adapt your communication style to the current game state, your action, and previ
         # - Player 0 (P0) raises in preflop but the chat shows call
         # - Both players raise in post-flop rounds but the pot doesn't increase
         
-        # Let's try to extract the action name directly from the action object
+        # Let's try to extract the action name and amount directly from the action object
         # This is more reliable than using a fixed mapping
         
         # Get the action string representation
         action_str = str(action)
         print(f"DEBUG: Action string: {action_str}")
         
+        # Try to extract the amount from the action object
+        action_amount = 0
+        if hasattr(action, "amount"):
+            action_amount = action.amount
+        print(f"DEBUG: Action amount: {action_amount}")
+        
         # Extract the action name based on the game trace
         # The game trace shows the actual actions being taken
         
-        # Get the current game state from the trace
-        trace = state.get_trace() if hasattr(state, "get_trace") else []
-        last_state = trace[-1] if trace else None
-        
-        # Try to determine the action from the trace
-        if last_state and hasattr(last_state, "last_action"):
-            last_action = last_state.last_action
-            print(f"DEBUG: Last action from trace: {last_action}")
-            
-            # Extract the action name from the last action
-            if "fold" in str(last_action).lower():
-                action_name = "fold"
-            elif "check" in str(last_action).lower():
-                action_name = "check"
-            elif "call" in str(last_action).lower():
-                action_name = "call"
-            elif "raise" in str(last_action).lower() or "bet" in str(last_action).lower():
-                # Check if the pot actually increases
-                if hasattr(state, "pot") and hasattr(last_state, "pot") and state.pot > last_state.pot:
-                    action_name = "raise"
-                else:
-                    action_name = "check"  # Use "check" if the pot doesn't increase
-            else:
-                # Default if we can't determine the action type
-                action_name = "play"
-        else:
-            # If we can't determine the action from the trace, use the fixed mapping
-            # This is a fallback based on our observations
-            if current_player == 1:  # Player 1 (P1)
-                if not hasattr(state, "board") or not state.board:  # Preflop
-                    action_name = "fold"
-                else:  # Flop, turn, river
-                    action_name = "check"
-            else:  # Player 0 (P0)
-                if not hasattr(state, "board") or not state.board:  # Preflop
-                    action_name = "call"
-                else:  # Flop, turn, river
-                    action_name = "check"
+        action_name = action.action
         
         print(f"DEBUG: Extracted action name: {action_name}")
         
@@ -231,7 +200,7 @@ Adapt your communication style to the current game state, your action, and previ
         action_system_message = f"""
 You are a poker player named {self.name} with a {self.personality_type} playing style.
 
-CRITICAL INSTRUCTION: Your action this round is: {action_name.upper()}
+CRITICAL INSTRUCTION: Your action this round is: {str(action_name).split('.')[-1].upper()}
 You MUST use this EXACT action word in your response.
 
 Your personality traits:
@@ -245,12 +214,17 @@ Core principles:
 3. Your role is to communicate naturally with other players
 4. Respond to messages in a way that reflects your personality
 5. Comment on the game state and actions in an engaging way
-6. BE TRUTHFUL about your action - you are {action_name.upper()}ING, not any other action
+6. BE TRUTHFUL about your action - you are {str(action_name).split('.')[-1].upper()}ING, not any other action
 
-As a {self.personality_type} player, speak in character while explicitly stating your {action_name} action.
+As a {self.personality_type} player, speak in character while explicitly stating your {str(action_name).split('.')[-1]} action.
 """
 
         # Create a context message for the LLM
+        # Include the action amount for raise or bet actions
+        action_description = str(action_name).split('.')[-1].upper()
+        if str(action_name).split('.')[-1].lower() in ["raise", "bet"] and action_amount > 0:
+            action_description = f"{str(action_name).split('.')[-1].upper()} {action_amount}"
+        
         context_message = {
             "role": "user",
             "content": f"""
@@ -258,26 +232,26 @@ Current game state:
 - Stage: {game_stage}
 - Pot: {pot}
 - {board_info}
-- YOUR ACTION: {action_name.upper()} (This is your actual action, you must use this exact word)
+- YOUR ACTION: {action_description} (This is your actual action, you must use this exact word)
 - Your hand strength: {"strong" if hand_strength > 0.7 else "medium" if hand_strength > 0.4 else "weak"}
 
 Recent table messages:
 {previous_messages[-3:] if previous_messages else "No previous messages"}
 
 CRITICAL INSTRUCTION: Generate a short poker table chat message (1-2 sentences) that MUST:
-1. Include the EXACT word "{action_name}" (not "play" or any other substitute)
+1. Include the EXACT word "{str(action_name).split('.')[-1]}" (not "play" or any other substitute)
 2. Reflect your personality
 3. Be appropriate for the current game state
 4. NEVER reveal your exact cards
 
 Your response MUST contain one of these phrases:
-- "I {action_name}"
-- "I'll {action_name}"
-- "I'm going to {action_name}"
-- "I will {action_name}"
-- "{action_name}ing"
+- "I {str(action_name).split('.')[-1]}"
+- "I'll {str(action_name).split('.')[-1]}"
+- "I'm going to {str(action_name).split('.')[-1]}"
+- "I will {str(action_name).split('.')[-1]}"
+- "{str(action_name).split('.')[-1]}ing"
 
-DO NOT use the word "play" as a substitute for "{action_name}".
+DO NOT use the word "play" as a substitute for "{str(action_name).split('.')[-1]}".
 """
         }
         
@@ -287,21 +261,26 @@ DO NOT use the word "play" as a substitute for "{action_name}".
             # This is more reliable than trying to access internal capabilities
             
             # Create a prompt that includes all the context
+            # Include the action amount for raise or bet actions
+            action_description = str(action_name).split('.')[-1]
+            if str(action_name).split('.')[-1].lower() in ["raise", "bet"] and action_amount > 0:
+                action_description = f"{str(action_name).split('.')[-1]} {action_amount}"
+            
             prompt = f"""
-As a poker player named {self.name} with a {self.personality_type} playing style:
-
-Current game state:
-- Stage: {game_stage}
-- Pot: {pot}
-- {board_info}
-- Your action: {action_name}
-- Your hand strength: {"strong" if hand_strength > 0.7 else "medium" if hand_strength > 0.4 else "weak"}
-
-Recent table messages:
-{previous_messages[-3:] if previous_messages else "No previous messages"}
-
-Generate a short, natural poker table chat message (1-2 sentences) that reflects your personality, current action, and game state. NEVER reveal your exact cards.
-"""
+    As a poker player named {self.name} with a {self.personality_type} playing style:
+    
+    Current game state:
+    - Stage: {game_stage}
+    - Pot: {pot}
+    - {board_info}
+    - Your action: {action_description}
+    - Your hand strength: {"strong" if hand_strength > 0.7 else "medium" if hand_strength > 0.4 else "weak"}
+    
+    Recent table messages:
+    {previous_messages[-3:] if previous_messages else "No previous messages"}
+    
+    Generate a short, natural poker table chat message (1-2 sentences) that reflects your personality, current action, and game state. NEVER reveal your exact cards.
+    """
             
             # Use a direct approach to generate a response
             import openai
@@ -331,52 +310,52 @@ Generate a short, natural poker table chat message (1-2 sentences) that reflects
                 
                 # Create some varied responses based on the game state and action
                 fallback_responses = [
-                    f"I'm thinking carefully about my {action_name} here. The {game_stage} is interesting.",
-                    f"Let's see how this {game_stage} plays out. I'm {action_name}ing for now.",
-                    f"I've made my decision to {action_name}. This {game_stage} requires careful play.",
-                    f"In poker, timing is everything. I'll {action_name} and see what happens.",
-                    f"The pot is {pot} now. My {action_name} reflects my confidence level."
+                    f"I'm thinking carefully about my {str(action_name).split('.')[-1]} here. The {game_stage} is interesting.",
+                    f"Let's see how this {game_stage} plays out. I'm {str(action_name).split('.')[-1]}ing for now.",
+                    f"I've made my decision to {str(action_name).split('.')[-1]}. This {game_stage} requires careful play.",
+                    f"In poker, timing is everything. I'll {str(action_name).split('.')[-1]} and see what happens.",
+                    f"The pot is {pot} now. My {str(action_name).split('.')[-1]} reflects my confidence level."
                 ]
                 
                 # Add personality-based responses
                 if self.personality["aggression"] > 0.6:
-                    fallback_responses.append(f"I play to win, not to minimize losses. {action_name.capitalize()} is my move.")
+                    fallback_responses.append(f"I play to win, not to minimize losses. {str(action_name).split('.')[-1].capitalize()} is my move.")
                 elif self.personality["bluff_tendency"] > 0.6:
-                    fallback_responses.append(f"Poker is a game of incomplete information. My {action_name} might surprise you.")
+                    fallback_responses.append(f"Poker is a game of incomplete information. My {str(action_name).split('.')[-1]} might surprise you.")
                 elif self.personality["risk_tolerance"] < 0.4:
-                    fallback_responses.append(f"Patience is a virtue in poker. My {action_name} is calculated.")
+                    fallback_responses.append(f"Patience is a virtue in poker. My {str(action_name).split('.')[-1]} is calculated.")
                 
                 chat_message = random.choice(fallback_responses)
                 print(f"Using fallback response: {chat_message}")
                 
         except Exception as e:
             # Final fallback if there's an error
-            chat_message = f"I'm going to {action_name}. Let's see what happens next."
+            chat_message = f"I'm going to {str(action_name).split('.')[-1]}. Let's see what happens next."
             print(f"Error in generate_reply: {e}")
         
         # Post-process the response to ensure it mentions the actual action
         # This is a last resort to make sure the chat message matches the action
-        print(f"DEBUG: Action name: {action_name}, Message: {chat_message}")
-        print(f"DEBUG: Action name in message: {action_name.lower() in chat_message.lower()}")
+        print(f"DEBUG: Action name: {str(action_name).split('.')[-1]}, Message: {chat_message}")
+        print(f"DEBUG: Action name in message: {str(action_name).split('.')[-1].lower() in chat_message.lower()}")
         
-        if action_name.lower() not in chat_message.lower():
+        if str(action_name).split('.')[-1].lower() not in chat_message.lower():
             print(f"DEBUG: Action name not in message, applying post-processing")
             # If the action name is not in the message, add it explicitly
             if "PLAY" in chat_message:
                 # Replace "PLAY" with the actual action
-                print(f"DEBUG: Replacing PLAY with {action_name.upper()}")
-                chat_message = chat_message.replace("PLAY", action_name.upper())
+                print(f"DEBUG: Replacing PLAY with {str(action_name).split('.')[-1].upper()}")
+                chat_message = chat_message.replace("PLAY", str(action_name).split('.')[-1].upper())
             elif "play" in chat_message.lower():
                 # Replace "play" with the actual action
-                print(f"DEBUG: Replacing play with {action_name.lower()}")
-                chat_message = chat_message.lower().replace("play", action_name.lower())
+                print(f"DEBUG: Replacing play with {str(action_name).split('.')[-1].lower()}")
+                chat_message = chat_message.lower().replace("play", str(action_name).split('.')[-1].lower())
                 # Restore the first letter capitalization if it was capitalized
                 if chat_message[0].islower() and len(chat_message) > 0:
                     chat_message = chat_message[0].upper() + chat_message[1:]
             else:
                 # If we can't replace "play", add the action at the beginning
                 print(f"DEBUG: Adding action at the beginning")
-                chat_message = f"I'll {action_name} here. " + chat_message
+                chat_message = f"I'll {str(action_name).split('.')[-1]} here. " + chat_message
             
             print(f"DEBUG: Post-processed message: {chat_message}")
         
