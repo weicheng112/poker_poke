@@ -79,10 +79,11 @@ def play_hand(seed=1234):
         act = get_action(state, current_agent)
         
         # Let the current agent respond
+        # Pass the action to the generate_reply method to ensure consistency
         response = current_agent.generate_reply(
             messages=[{"role": "user", "content": message}],
             sender=manager,
-            config=None  # Add the config parameter
+            config={"action": act}  # Pass the action in the config
         )
         
         try:
