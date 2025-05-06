@@ -118,11 +118,11 @@ Adapt your communication style to the current game state, your action, and previ
         if config and "action" in config:
             # Use the action passed from the engine
             action = config["action"]
-            print("DEBUG: Using action from engine")
+            # print("DEBUG: Using action from engine")
         else:
             # Fallback to getting the action from the solver
             action = get_action(state, self)
-            print("DEBUG: Using action from solver (fallback)")
+            # print("DEBUG: Using action from solver (fallback)")
         
         # Extract game information for context
         game_stage = get_game_stage(state)
@@ -142,7 +142,7 @@ Adapt your communication style to the current game state, your action, and previ
         # let's use a simpler approach: just use the action name from the game trace
         
         # Print the raw action for debugging
-        print(f"DEBUG: Raw action: {action}")
+        # print(f"DEBUG: Raw action: {action}")
         
         # For now, let's use a fixed mapping based on the player and game stage
         # This is a temporary solution until we can find a better way to extract the action name
@@ -170,20 +170,20 @@ Adapt your communication style to the current game state, your action, and previ
         
         # Get the action string representation
         action_str = str(action)
-        print(f"DEBUG: Action string: {action_str}")
+        # print(f"DEBUG: Action string: {action_str}")
         
         # Try to extract the amount from the action object
         action_amount = 0
         if hasattr(action, "amount"):
             action_amount = action.amount
-        print(f"DEBUG: Action amount: {action_amount}")
+        # print(f"DEBUG: Action amount: {action_amount}")
         
         # Extract the action name based on the game trace
         # The game trace shows the actual actions being taken
         
         action_name = action.action
         
-        print(f"DEBUG: Extracted action name: {action_name}")
+        # print(f"DEBUG: Extracted action name: {action_name}")
         
         # Extract previous messages for context
         previous_messages = []
@@ -390,29 +390,29 @@ For inspiration, consider this example phrase in your style:
         
         # Post-process the response to ensure it mentions the actual action
         # This is a last resort to make sure the chat message matches the action
-        print(f"DEBUG: Action name: {str(action_name).split('.')[-1]}, Message: {chat_message}")
-        print(f"DEBUG: Action name in message: {str(action_name).split('.')[-1].lower() in chat_message.lower()}")
+        # print(f"DEBUG: Action name: {str(action_name).split('.')[-1]}, Message: {chat_message}")
+        # print(f"DEBUG: Action name in message: {str(action_name).split('.')[-1].lower() in chat_message.lower()}")
         
         if str(action_name).split('.')[-1].lower() not in chat_message.lower():
             print(f"DEBUG: Action name not in message, applying post-processing")
             # If the action name is not in the message, add it explicitly
             if "PLAY" in chat_message:
                 # Replace "PLAY" with the actual action
-                print(f"DEBUG: Replacing PLAY with {str(action_name).split('.')[-1].upper()}")
+                # print(f"DEBUG: Replacing PLAY with {str(action_name).split('.')[-1].upper()}")
                 chat_message = chat_message.replace("PLAY", str(action_name).split('.')[-1].upper())
             elif "play" in chat_message.lower():
                 # Replace "play" with the actual action
-                print(f"DEBUG: Replacing play with {str(action_name).split('.')[-1].lower()}")
+                # print(f"DEBUG: Replacing play with {str(action_name).split('.')[-1].lower()}")
                 chat_message = chat_message.lower().replace("play", str(action_name).split('.')[-1].lower())
                 # Restore the first letter capitalization if it was capitalized
                 if chat_message[0].islower() and len(chat_message) > 0:
                     chat_message = chat_message[0].upper() + chat_message[1:]
             else:
                 # If we can't replace "play", add the action at the beginning
-                print(f"DEBUG: Adding action at the beginning")
+                # print(f"DEBUG: Adding action at the beginning")
                 chat_message = f"I'll {str(action_name).split('.')[-1]} here. " + chat_message
             
-            print(f"DEBUG: Post-processed message: {chat_message}")
+            # print(f"DEBUG: Post-processed message: {chat_message}")
         
         # Store this message in the agent's memory
         self.message_history.append(chat_message)
