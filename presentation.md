@@ -15,12 +15,53 @@ The project includes an innovative implementation of poker agents using Microsof
 - **Personality-Driven Behavior**:
 
   - Six distinct personality types:
+
     - tight-aggressive
-    - loose-passive, maniac
+    - loose-passive
+    - crazy
     - rock
     - tricky
     - calling station
+
+    ex:
+
+    ```json
+    "tight_aggressive": {
+        "traits": {
+            "aggression": 0.75,      # High aggression
+            "bluff_tendency": 0.30,  # Moderate bluffing
+            "risk_tolerance": 0.40,  # Moderate-low risk tolerance
+            "adaptability": 0.65,    # Good adaptability
+            "tilt_prone": 0.25,      # Low tilt tendency
+            "patience": 0.80         # High patience
+        }
+    }
+    ```
+
   - Each personality has specific traits (aggression, bluff tendency, risk tolerance, etc.)
+
+  ```json
+    "aggression": {
+        "description": "Tendency to bet and raise rather than check and call",
+    },
+    "bluff_tendency": {
+        "description": "Willingness to represent hands they don't have",
+    },
+    "risk_tolerance": {
+        "description": "Comfort with variance and willingness to gamble",
+    },
+    "adaptability": {
+        "description": "How quickly they adjust to opponents' strategies",
+    },
+    "tilt_prone": {
+        "description": "Tendency to play emotionally after setbacks",
+    },
+    "patience": {
+        "description": "Willingness to wait for premium hands",
+
+    }
+  ```
+
   - Verbal tendencies include characteristic vocabulary and communication patterns
   - Agents respond differently to the same game situations based on their personality
 
@@ -36,6 +77,10 @@ The project includes an innovative implementation of poker agents using Microsof
   - A dealer facilitates the game flow
   - Players respond to game state updates with personality-appropriate messages
   - The system captures both the technical poker actions and the natural language exchanges
+
+```python
+python run_poker_autogen.py
+```
 
 ## 1. Project Purpose and Goals
 
@@ -118,14 +163,7 @@ The system follows a modern AI architecture combining:
 ### Vector Embeddings
 
 - Uses OpenAI's `text-embedding-3-small` model
-- Converts text to 1536-dimensional vectors
 - Enables semantic similarity search
-
-### Chunking Strategy for Large Texts
-
-- Handles token limits by splitting text into manageable chunks
-- Generates embeddings for each chunk
-- Averages embeddings to create a single representation
 
 ### Semantic Search
 
@@ -173,6 +211,10 @@ Poker Archetype: Rock
 ================================================================================
 
 Best archetype match: rock (Score: 0.85)
+```
+
+```python
+  python .\analyze_semantic_personality.py P0
 ```
 
 ## 7. Data Structure Example
