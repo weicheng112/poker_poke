@@ -16,39 +16,55 @@ class PlayerAgent(AssistantAgent):
     A lightweight AutoGen AssistantAgent with:
         • name          – seat identifier ("P0", "P1", …)
         • blackboard    – dict where engine can drop private/public state
+        • personality   – fixed personality traits that influence decision making
     """
 
-    def __init__(self, name: str):
-        # Create a detailed system message for the agent with a unique personality
-        from src.solver_tool import get_agent_personality
+    def __init__(self, name: str, personality_type=None):
+        """
+        Initialize a PlayerAgent with a specific or random personality.
+        
+        Args:
+            name (str): The name of the agent (e.g., "P0", "P1")
+            personality_type (str, optional): The type of personality to use.
+                                             If None, a random one will be selected.
+                                             Options: "tight_aggressive", "loose_passive",
+                                             "maniac", "rock", "tricky", "calling_station"
+        """
+        # Import the personality profiles
+        from src.personalities import get_personality_profile, OPPONENT_PROFILES
         
         # Set up a seed based on the name to ensure consistent personality
         import random
         random.seed(hash(name))
         
-        # Generate personality traits directly instead of using get_agent_personality(None)
-        # This avoids the AttributeError: 'NoneType' object has no attribute 'name'
-        personality_traits = {
-            "aggression": random.uniform(0.3, 0.8),  # How aggressive the agent is
-            "bluff_tendency": random.uniform(0.1, 0.5),  # How likely to bluff
-            "risk_tolerance": random.uniform(0.2, 0.7),  # How much risk they'll take
-        }
+        # Get a personality profile (either specified or random)
+        if personality_type and personality_type in OPPONENT_PROFILES:
+            profile = OPPONENT_PROFILES[personality_type]
+            self.personality_type = personality_type
+        else:
+            # If no valid personality type is provided, choose a random one
+            self.personality_type = random.choice(list(OPPONENT_PROFILES.keys()))
+            profile = OPPONENT_PROFILES[self.personality_type]
         
-        # Define personality type based on traits
-        personality_type = "aggressive"
-        if personality_traits["bluff_tendency"] > 0.4:
-            personality_type = "bluffer"
-        elif personality_traits["risk_tolerance"] < 0.4:
-            personality_type = "conservative"
+        # Store the personality traits
+        self.personality = profile["traits"].copy()
+        
+        # Get the play style description
+        play_style = profile["play_style"]
         
         # Create a comprehensive system message
         system_message = f"""
-You are a poker player named {name} with a {personality_type} playing style.
+You are a poker player named {name} with a {self.personality_type} playing style.
 
 Your personality traits:
-- Aggression: {personality_traits["aggression"]:.2f} (0-1 scale)
-- Bluff tendency: {personality_traits["bluff_tendency"]:.2f} (0-1 scale)
-- Risk tolerance: {personality_traits["risk_tolerance"]:.2f} (0-1 scale)
+- Aggression: {self.personality["aggression"]:.2f} (0-1 scale)
+- Bluff tendency: {self.personality["bluff_tendency"]:.2f} (0-1 scale)
+- Risk tolerance: {self.personality["risk_tolerance"]:.2f} (0-1 scale)
+- Adaptability: {self.personality["adaptability"]:.2f} (0-1 scale)
+- Tilt proneness: {self.personality["tilt_prone"]:.2f} (0-1 scale)
+- Patience: {self.personality["patience"]:.2f} (0-1 scale)
+
+Play style: {play_style}
 
 Core principles:
 1. NEVER reveal your exact hole cards to opponents
@@ -56,15 +72,6 @@ Core principles:
 3. Your role is to communicate naturally with other players
 4. Respond to messages in a way that reflects your personality
 5. Comment on the game state and actions in an engaging way
-
-As a {personality_type} player:
-{
-"You're assertive and confident. You believe in applying pressure and taking control of the table. You're not afraid to make big bets when you sense weakness."
-if personality_type == "aggressive" else
-"You enjoy the psychological aspect of poker. You're unpredictable and like to keep opponents guessing. You occasionally represent hands you don't have."
-if personality_type == "bluffer" else
-"You're patient and calculated. You prefer to minimize risk and wait for strong hands. You're observant of your opponents' patterns and exploit them methodically."
-}
 
 Adapt your communication style to the current game state, your action, and previous messages.
 """
@@ -88,9 +95,8 @@ Adapt your communication style to the current game state, your action, and previ
         # Add a message history to track previous messages
         self.message_history = []
         
-        # Store personality traits for reference
-        self.personality = personality_traits
-        self.personality_type = personality_type
+        # Store verbal tendencies for communication
+        self.verbal_tendencies = profile["verbal_tendencies"]
 
 
     def generate_reply(self, messages, sender, config):
@@ -99,7 +105,9 @@ Adapt your communication style to the current game state, your action, and previ
         This method leverages the system prompt and the LLM's capabilities for more natural agent communication.
         """
         import json
+        import random
         from src.solver_tool import get_action, evaluate_hand_strength
+        from src.personalities import get_game_stage
         
         # Get the current state from the blackboard
         state = self.blackboard.get("state")
@@ -117,14 +125,7 @@ Adapt your communication style to the current game state, your action, and previ
             print("DEBUG: Using action from solver (fallback)")
         
         # Extract game information for context
-        game_stage = "preflop"
-        if hasattr(state, "board") and state.board:
-            if len(state.board) == 3:
-                game_stage = "flop"
-            elif len(state.board) == 4:
-                game_stage = "turn"
-            elif len(state.board) == 5:
-                game_stage = "river"
+        game_stage = get_game_stage(state)
         
         # Get pot size
         pot = getattr(state, "pot", 0)
@@ -207,6 +208,9 @@ Your personality traits:
 - Aggression: {self.personality["aggression"]:.2f} (0-1 scale)
 - Bluff tendency: {self.personality["bluff_tendency"]:.2f} (0-1 scale)
 - Risk tolerance: {self.personality["risk_tolerance"]:.2f} (0-1 scale)
+- Adaptability: {self.personality["adaptability"]:.2f} (0-1 scale)
+- Tilt proneness: {self.personality["tilt_prone"]:.2f} (0-1 scale)
+- Patience: {self.personality["patience"]:.2f} (0-1 scale)
 
 Core principles:
 1. NEVER reveal your exact hole cards to opponents
@@ -217,6 +221,11 @@ Core principles:
 6. BE TRUTHFUL about your action - you are {str(action_name).split('.')[-1].upper()}ING, not any other action
 
 As a {self.personality_type} player, speak in character while explicitly stating your {str(action_name).split('.')[-1]} action.
+
+Your verbal tendencies:
+- Confidence level: {self.verbal_tendencies["confidence"]}
+- Chattiness: {self.verbal_tendencies["chattiness"]}
+- Key vocabulary: {', '.join(self.verbal_tendencies["vocabulary"])}
 """
 
         # Create a context message for the LLM
@@ -224,6 +233,9 @@ As a {self.personality_type} player, speak in character while explicitly stating
         action_description = str(action_name).split('.')[-1].upper()
         if str(action_name).split('.')[-1].lower() in ["raise", "bet"] and action_amount > 0:
             action_description = f"{str(action_name).split('.')[-1].upper()} {action_amount}"
+        
+        # Choose a random example phrase
+        example_phrase = random.choice(self.verbal_tendencies['example_phrases'])
         
         context_message = {
             "role": "user",
@@ -240,9 +252,10 @@ Recent table messages:
 
 CRITICAL INSTRUCTION: Generate a short poker table chat message (1-2 sentences) that MUST:
 1. Include the EXACT word "{str(action_name).split('.')[-1]}" (not "play" or any other substitute)
-2. Reflect your personality
+2. Reflect your {self.personality_type} personality
 3. Be appropriate for the current game state
 4. NEVER reveal your exact cards
+5. Use at least one of your characteristic vocabulary words: {', '.join(self.verbal_tendencies["vocabulary"])}
 
 Your response MUST contain one of these phrases:
 - "I {str(action_name).split('.')[-1]}"
@@ -252,6 +265,9 @@ Your response MUST contain one of these phrases:
 - "{str(action_name).split('.')[-1]}ing"
 
 DO NOT use the word "play" as a substitute for "{str(action_name).split('.')[-1]}".
+
+For inspiration, consider this example phrase in your style:
+"{example_phrase}"
 """
         }
         
@@ -279,7 +295,14 @@ DO NOT use the word "play" as a substitute for "{str(action_name).split('.')[-1]
     Recent table messages:
     {previous_messages[-3:] if previous_messages else "No previous messages"}
     
-    Generate a short, natural poker table chat message (1-2 sentences) that reflects your personality, current action, and game state. NEVER reveal your exact cards.
+    Generate a short, natural poker table chat message (1-2 sentences) that:
+    1. Reflects your {self.personality_type} personality
+    2. Mentions your {action_description} action
+    3. Uses your characteristic vocabulary: {', '.join(self.verbal_tendencies["vocabulary"])}
+    4. NEVER reveals your exact cards
+    
+    For inspiration, consider this example phrase in your style:
+    "{random.choice(self.verbal_tendencies["example_phrases"])}"
     """
             
             # Use a direct approach to generate a response
@@ -309,21 +332,53 @@ DO NOT use the word "play" as a substitute for "{str(action_name).split('.')[-1]
                 import random
                 
                 # Create some varied responses based on the game state and action
-                fallback_responses = [
-                    f"I'm thinking carefully about my {str(action_name).split('.')[-1]} here. The {game_stage} is interesting.",
-                    f"Let's see how this {game_stage} plays out. I'm {str(action_name).split('.')[-1]}ing for now.",
-                    f"I've made my decision to {str(action_name).split('.')[-1]}. This {game_stage} requires careful play.",
-                    f"In poker, timing is everything. I'll {str(action_name).split('.')[-1]} and see what happens.",
-                    f"The pot is {pot} now. My {str(action_name).split('.')[-1]} reflects my confidence level."
-                ]
+                # Create personality-specific fallback responses using verbal tendencies
+                fallback_responses = []
                 
-                # Add personality-based responses
-                if self.personality["aggression"] > 0.6:
-                    fallback_responses.append(f"I play to win, not to minimize losses. {str(action_name).split('.')[-1].capitalize()} is my move.")
-                elif self.personality["bluff_tendency"] > 0.6:
-                    fallback_responses.append(f"Poker is a game of incomplete information. My {str(action_name).split('.')[-1]} might surprise you.")
-                elif self.personality["risk_tolerance"] < 0.4:
-                    fallback_responses.append(f"Patience is a virtue in poker. My {str(action_name).split('.')[-1]} is calculated.")
+                # Add responses based on personality type
+                if self.personality_type == "tight_aggressive":
+                    fallback_responses.extend([
+                        f"I'll {str(action_name).split('.')[-1]} here - this is a calculated move.",
+                        f"The value in this spot is clear. I {str(action_name).split('.')[-1]}.",
+                        f"Position is key in this hand. I {str(action_name).split('.')[-1]}."
+                    ])
+                elif self.personality_type == "loose_passive":
+                    fallback_responses.extend([
+                        f"I'll {str(action_name).split('.')[-1]} and see what happens. Poker should be fun!",
+                        f"Maybe I'll get lucky. I {str(action_name).split('.')[-1]}.",
+                        f"I'm just here to call and enjoy the game. {str(action_name).split('.')[-1].capitalize()}ing now."
+                    ])
+                elif self.personality_type == "maniac":
+                    fallback_responses.extend([
+                        f"I'm raising- oh wait, I mean I {str(action_name).split('.')[-1]}! I love the pressure!",
+                        f"More aggressive action! I {str(action_name).split('.')[-1]}!",
+                        f"Time for some action! I'm {str(action_name).split('.')[-1]}ing!"
+                    ])
+                elif self.personality_type == "rock":
+                    fallback_responses.extend([
+                        f"I'll carefully {str(action_name).split('.')[-1]} here.",
+                        f"The premium hands are worth waiting for. I {str(action_name).split('.')[-1]}.",
+                        f"I'll {str(action_name).split('.')[-1]}. Patience is key in poker."
+                    ])
+                elif self.personality_type == "tricky":
+                    fallback_responses.extend([
+                        f"This is an interesting spot. I'll {str(action_name).split('.')[-1]}.",
+                        f"Perhaps my {str(action_name).split('.')[-1]} will surprise you.",
+                        f"I'm {str(action_name).split('.')[-1]}ing. Balance is important in this situation."
+                    ])
+                elif self.personality_type == "calling_station":
+                    fallback_responses.extend([
+                        f"I'm curious to see what happens. I {str(action_name).split('.')[-1]}.",
+                        f"I'll {str(action_name).split('.')[-1]} and see what you have.",
+                        f"I've come this far, so I'll {str(action_name).split('.')[-1]}."
+                    ])
+                else:
+                    # Generic fallbacks if personality type isn't recognized
+                    fallback_responses.extend([
+                        f"I'm thinking about my {str(action_name).split('.')[-1]} here. The {game_stage} is interesting.",
+                        f"Let's see how this {game_stage} plays out. I'm {str(action_name).split('.')[-1]}ing for now.",
+                        f"I've made my decision to {str(action_name).split('.')[-1]}. This {game_stage} requires careful play."
+                    ])
                 
                 chat_message = random.choice(fallback_responses)
                 print(f"Using fallback response: {chat_message}")

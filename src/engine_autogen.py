@@ -11,9 +11,9 @@ def play_hand(seed=1234):
     # Initialize the poker state
     state = pk.State.from_seed(n_players=2, button=0, sb=5, bb=10, stake=1000, seed=seed)
     
-    # Create the agents
-    player0 = PlayerAgent("P0")
-    player1 = PlayerAgent("P1")
+    # Create the agents with specific personality types
+    player0 = PlayerAgent("P0", personality_type="rock")
+    player1 = PlayerAgent("P1", personality_type="loose_passive")
     
     # Create a group chat for the agents
     groupchat = autogen.GroupChat(
@@ -126,11 +126,21 @@ def play_hand(seed=1234):
     print("\n=== GAME TRACE ===")
     print(pk.visualize_trace(trace))
     
-    # Return the trace and chat history
+    # Return the trace, chat history, and player information
     return {
         "trace": trace,
         "chat_history": chat_history,
-        "groupchat": groupchat  # Return the groupchat for further analysis
+        "groupchat": groupchat,  # Return the groupchat for further analysis
+        "players": {
+            "P0": {
+                "personality_type": player0.personality_type,
+                "personality_traits": player0.personality
+            },
+            "P1": {
+                "personality_type": player1.personality_type,
+                "personality_traits": player1.personality
+            }
+        }
     }
 
 if __name__ == "__main__":
