@@ -1,0 +1,214 @@
+{
+  "document_type": "game",
+  "game_id": "game_15351134",
+  "timestamp": "2025-05-05T22:03:03.369385",
+  "players": {
+    "P0": {},
+    "P1": {}
+  },
+  "actions": [
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "action_id": "action_game_15351134_1",
+      "game_stage": "preflop",
+      "action": "raise",
+      "amount": 40.0,
+      "pot_size": 60.0,
+      "position": "unknown",
+      "board_cards": "",
+      "text_description": "P1 raised to 40.0 in unknown position during preflop"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "action_id": "action_game_15351134_2",
+      "game_stage": "preflop",
+      "action": "raise",
+      "amount": 30.0,
+      "pot_size": 130.0,
+      "position": "unknown",
+      "board_cards": "",
+      "text_description": "P0 raised to 30.0 in unknown position during preflop"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "action_id": "action_game_15351134_3",
+      "game_stage": "preflop",
+      "action": "raise",
+      "amount": 40.0,
+      "pot_size": 200.0,
+      "position": "unknown",
+      "board_cards": "",
+      "text_description": "P1 raised to 40.0 in unknown position during preflop"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "action_id": "action_game_15351134_4",
+      "game_stage": "preflop",
+      "action": "call",
+      "amount": 0.0,
+      "pot_size": 240.0,
+      "position": "unknown",
+      "board_cards": "5h 9d 4d",
+      "text_description": "P0 called in unknown position during preflop with board 5h 9d 4d"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "action_id": "action_game_15351134_5",
+      "game_stage": "flop",
+      "action": "raise",
+      "amount": 35.0,
+      "pot_size": 275.0,
+      "position": "unknown",
+      "board_cards": "5h 9d 4d",
+      "text_description": "P1 raised to 35.0 in unknown position during flop with board 5h 9d 4d"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "action_id": "action_game_15351134_6",
+      "game_stage": "flop",
+      "action": "call",
+      "amount": 0.0,
+      "pot_size": 310.0,
+      "position": "unknown",
+      "board_cards": "5h 9d 4d Td",
+      "text_description": "P0 called in unknown position during flop with board 5h 9d 4d Td"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "action_id": "action_game_15351134_7",
+      "game_stage": "turn",
+      "action": "check",
+      "amount": 0.0,
+      "pot_size": 310.0,
+      "position": "unknown",
+      "board_cards": "5h 9d 4d Td",
+      "text_description": "P1 checked in unknown position during turn with board 5h 9d 4d Td"
+    },
+    {
+      "document_type": "game_action",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "action_id": "action_game_15351134_8",
+      "game_stage": "turn",
+      "action": "fold",
+      "amount": 0.0,
+      "pot_size": 310.0,
+      "position": "unknown",
+      "board_cards": "5h 9d 4d Td",
+      "text_description": "P0 folded in unknown position during turn with board 5h 9d 4d Td"
+    }
+  ],
+  "chat_messages": [
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "message_id": "message_game_15351134_0",
+      "message": "You know what? I think it's time to spice things up a bit! I'm going to RAISE to 40.0 and see if anyone wants to join the fun!",
+      "sentiment": "aggressive",
+      "associated_action": "raise",
+      "text_description": "P1 said: 'You know what? I think it's time to spice things up a bit! I'm going to RAISE to 40.0 and see if anyone wants to join the fun!', expressing  sentiment while raiseing"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "message_id": "message_game_15351134_1",
+      "message": "I'll raise to 30.0; I'm being careful with my medium hand. Sometimes it's best to wait for a premium opportunity.",
+      "sentiment": "cautious",
+      "associated_action": "raise",
+      "text_description": "P0 said: 'I'll raise to 30.0; I'm being careful with my medium hand. Sometimes it's best to wait for a premium opportunity.', expressing cautious sentiment while raiseing"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "message_id": "message_game_15351134_2",
+      "message": "\"Alright, I'm feeling a bit lucky today, so I'll raise 40.0 and see if anyone wants to join the fun!\"",
+      "sentiment": "friendly",
+      "associated_action": "raise",
+      "text_description": "P1 said: '\"Alright, I'm feeling a bit lucky today, so I'll raise 40.0 and see if anyone wants to join the fun!\"', expressing friendly sentiment while raiseing"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "message_id": "message_game_15351134_3",
+      "message": "I'll take a careful approach here and just Call. Sometimes it's best to wait for those premium hands.",
+      "sentiment": "cautious",
+      "associated_action": "call",
+      "text_description": "P0 said: 'I'll take a careful approach here and just Call. Sometimes it's best to wait for those premium hands.', expressing cautious sentiment while calling"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "message_id": "message_game_15351134_4",
+      "message": "\"I'll raise to 35.0\u2014let's have some fun and see if I can get lucky with this hand!\"",
+      "sentiment": "friendly",
+      "associated_action": "raise",
+      "text_description": "P1 said: '\"I'll raise to 35.0\u2014let's have some fun and see if I can get lucky with this hand!\"', expressing friendly sentiment while raiseing"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "message_id": "message_game_15351134_5",
+      "message": "\"I'll be careful and just Call here, waiting for the right moment to strike with my strong hand.\"",
+      "sentiment": "cautious",
+      "associated_action": "call",
+      "text_description": "P0 said: '\"I'll be careful and just Call here, waiting for the right moment to strike with my strong hand.\"', expressing cautious sentiment while calling"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P1",
+      "message_id": "message_game_15351134_6",
+      "message": "I'll just check and see how this plays out\u2014feeling a bit lucky today! Always fun to keep the action going, right?",
+      "sentiment": "friendly",
+      "associated_action": "check",
+      "text_description": "P1 said: 'I'll just check and see how this plays out\u2014feeling a bit lucky today! Always fun to keep the action going, right?', expressing friendly sentiment while checking"
+    },
+    {
+      "document_type": "chat_message",
+      "game_id": "game_15351134",
+      "player_id": "P0",
+      "message_id": "message_game_15351134_7",
+      "message": "\"I'm going to be careful here and fold. I'll wait for a more premium hand to make my move.\"",
+      "sentiment": "cautious",
+      "associated_action": "fold",
+      "text_description": "P0 said: '\"I'm going to be careful here and fold. I'll wait for a more premium hand to make my move.\"', expressing cautious sentiment while folding"
+    }
+  ],
+  "hand_summary": {
+    "document_type": "hand_summary",
+    "game_id": "game_15351134",
+    "hole_cards": {
+      "P0": "5s Tc",
+      "P1": "Qd 8d"
+    },
+    "winner": "P1",
+    "pot_amount": 310.0,
+    "profit_loss": {
+      "P1": 10.0,
+      "P0": -10.0
+    },
+    "showdown_reached": false,
+    "final_board": "5h 9d 4d Td",
+    "text_description": "Game game_15351134 ended with P1 winning a pot of 310.0 when P0 folded with final board 5h 9d 4d Td"
+  }
+}
